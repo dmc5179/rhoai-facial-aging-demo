@@ -103,7 +103,7 @@ def _unpack(response_item):
 
 def send_request(image, endpoint):
     payload = _serialize(image)
-    raw_response = requests.post(endpoint, json = payload)
+    raw_response = requests.post(endpoint, json = payload, verify=False) #Disable SSL for now due to self signed certs in OCP
     try:
         response = raw_response.json()
     except:
