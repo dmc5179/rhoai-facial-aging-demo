@@ -1,9 +1,10 @@
 import streamlit as st
 import requests
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 import warnings
 from transformers import ViTImageProcessor
+import time
 
 # --- 1. CONFIGURATION (from your notebook) ---
 
@@ -14,7 +15,9 @@ warnings.filterwarnings("ignore", message="Unverified HTTPS request is being mad
 INFERENCE_URL = 'https://famodel-sandbox.apps.rhoai.sandbox2386.opentlc.com/v2/models/famodel/versions/1/infer'
 
 # Dictionary to map the model's output index to the age group label
-ID2LABEL = {0: '0-2', 1: '3-5', 2: '6-9', 3: '10-14', 4: '15-19', 5: '20-29', 6: '30-39', 7: '40-49', 8: '50-59', 9: '60-69', 10: '70+'}
+#ID2LABEL = {0: '0-2', 1: '3-5', 2: '6-9', 3: '10-14', 4: '15-19', 5: '20-29', 6: '30-39', 7: '40-49', 8: '50-59', 9: '60-69', 10: '70+'}
+ID2LABEL = {0: '01', 1: '02', 2: '03', 3: '04', 4: '05', 5: '06-07', 6: '08-09', 7: '10-12', 8: '13-15', 9: '16-20', 10: '21-25', 11: '26-30', 12: '31-35', 13: '36-40', 14: '41-45', 15: '46-50', 16: '51-55', 17: '56-60', 18: '61-65', 19: '66-70', 20: '71-80', 21: '81-90', 22: '90+'}
+
 # Note: I've updated your id2label mapping to a more standard one based on the model card.
 # If your fine-tuned model uses the 23-category mapping, please replace the dictionary above with the one from your notebook.
 
@@ -46,8 +49,10 @@ uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png
 
 if uploaded_file is not None and processor is not None:
     # Display the uploaded image
-    image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption='Uploaded Image', use_column_width=True)
+   # image = Image.open(uploaded_file).convert("RGB")
+    image_to_fix = Image.open(uploaded_file)
+    image = ImageOps.exif_transpose(image_to_fix).convert("RGB")
+    st.image(image, caption='Uploaded Image', use_container_width=True)
 
     # Add a button to trigger the prediction
     if st.button('Predict Age Group'):
@@ -83,7 +88,8 @@ if uploaded_file is not None and processor is not None:
 
                 output_data = np.array(result['outputs'][0]['data'])
                 predicted_class_index = np.argmax(output_data)
-                predicted_age_group = ID2LABEL.get(predicted_class_index, "Unknown")
+#                predicted_age_group = ID2LABEL.get(predicted_class_index, "Unknown")
+                predicted_age_group = ID2LABEL.get(predicted_class_index)
 
                 st.success(f"**Predicted Age Group:** {predicted_age_group}")
 
