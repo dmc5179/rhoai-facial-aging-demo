@@ -1,7 +1,15 @@
+---
+apiVersion: project.openshift.io/v1
+kind: Project
+metadata:
+  name: facial-aging
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: fa-app
+  namespace: facial-aging
 spec:
   replicas: 1
   selector:
@@ -23,7 +31,7 @@ spec:
         imagePullPolicy: IfNotPresent
         name: container
         ports:
-        - containerPort: 8051
+        - containerPort: 8080
           protocol: TCP
         resources: {}
         terminationMessagePath: /dev/termination-log
@@ -31,12 +39,38 @@ spec:
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: fa-app-sa
+      ServiceAccountName: fa-app-sa
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fa-app-sa
+  namespace: facial-aging
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: anyuid-for-fa-app-sa-serviceaccount-binding
+  namespace: facial-aging
+subjects:
+- kind: ServiceAccount
+  name: fa-app-sa
+  namespace: facial-aging
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:anyuid
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: fa-app
+  namespace: facial-aging
 spec:
   ports:
   - port: 80
@@ -50,6 +84,7 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: fa-app
+  namespace: facial-aging
 spec:
   port:
     targetPort: 8501
